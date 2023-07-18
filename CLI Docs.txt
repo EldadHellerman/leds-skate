@@ -1,0 +1,31 @@
+commands will be seperated using ';'.
+newlines are ignored:
+spaces are ignored unless:
+    - in function names - "se t"
+	- in ints, where theyre used as a delimiter - "1 2" is 1, and then 2, not 12.
+
+{} are used for a rgb values in dec seperated with ',' - "{255, 0, 01}" is red.
+
+[] are used for arrays, in which ',' is a seperator - [0 , ffff00 ,{255, 0 ,6} ]
+
+datatypes:
+	- int is a number - "12" || " 34  "
+	- color is a color - "#ff0056" || "{ 34,143, 200 }"
+	
+functions:
+	set(int place, color c, int millis); //sets leds in place $place to color $color within $millis milliseconds without holding
+	
+	set(color[] colors, int millis); //sets leds begining from led 0 to $colors in array within $millis milliseconds without holding
+	
+	delay(int millis); //waits for $millis milliseconds before executing next command
+
+valid code:
+	set (  12 ,  {  255,  0,  23 }  , 0);
+	set  (  [0,0,0, {67,124, 255} ,ff0067,23, 5] ,  4561);
+	
+TODO:
+
+TODO MAYBE:
+	use spaces as seperaters in arrays ("[]") and color trilets ("{}").
+	add a boolean to set() that determines if it holds while executing (waits for transition to finish) or not.
+	
