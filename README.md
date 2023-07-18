@@ -15,4 +15,4 @@ To control the addressable LED's (ws2812b and ws2812c 20*20) I'm using
 that does it with the very poorly documented DMA of the esp8266.
 
 # Build
-I'm used the esp-open-sdk toolchain. will upate this once I found out the best way to build this in 2023.
+I'v used the esp-open-sdk toolchain. will upate this once I found out the best way to build this in 2023.
