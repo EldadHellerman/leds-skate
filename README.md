@@ -11,7 +11,7 @@ Originally there was an android app to control them as well, but it's so old I c
 Anyway (and for that reason), I thing a browser based GUI will be best (which will be hosted on the esp8266 as well).
 
 To control the addressable LED's (ws2812b and ws2812c 20*20) I'm using
-[Charles Lohr WS2812 i2s library]([https://github.com/vuejs/vue](https://github.com/cnlohr/esp8266ws2812i2s)),
+[Charles Lohr WS2812 i2s library](https://github.com/cnlohr/esp8266ws2812i2s),
 that does it with the very poorly documented DMA of the esp8266.
 
 # Build
