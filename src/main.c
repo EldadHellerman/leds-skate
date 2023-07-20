@@ -155,6 +155,9 @@ void start_default_script(void){
 }
 
 //#include "upgrade.h"
+void ICACHE_FLASH_ATTR user_pre_init(void){
+}
+
 void ICACHE_FLASH_ATTR user_init(void){
 	setMaxCommandNameLength(20);
 	uart_div_modify(0,UART_CLK_FREQ/115200); //uart_init(uart0_br, uart1_br); //why am i not using that?

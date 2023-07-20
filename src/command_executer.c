@@ -210,7 +210,7 @@ static void ICACHE_FLASH_ATTR execute_script(){
 		// -shift out 15 black
 		// -repeat for each color
 		int p[] = {0, 100};
-		int nextStage = 200;
+		// int nextStage = 200;
 		if(script_3_stage.stage == 0){
 			p[0] = script_3_colors[script_3_stage.color_number];
 			shiftOut(p);
