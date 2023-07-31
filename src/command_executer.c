@@ -202,10 +202,10 @@ static void execute_script(){
 		shiftOut(p);
 		os_timer_arm(&script_timer, 800, 0);
 	}else if(active_script == 3){
-		const int lit_amount = 7;
+		const int lit_amount = 10;
 		const int step_delay_ms = 30;
 		//stages:
-		// -shift out n from color
+		// -shift out lit_amount from color
 		// -shift out NUMBER_OF_LEDS-lit_amount blacks
 		// -shift in NUMBER_OF_LEDS-lit_amount blacks
 		// -shift out NUMBER_OF_LEDS-lit_amount from color

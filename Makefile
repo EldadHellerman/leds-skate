@@ -11,8 +11,8 @@ INCLUDE_DIR = include
 BUILD_DIR = build
 SRC_DIR = src
 BIN_DIR = image
-SDK_DIR = /mnt/d/Hobbies/programing/esp8266/espressif/ESP8266_NONOS_SDK_V2.2
-# SDK_DIR = /mnt/d/Hobbies/programing/esp8266/espressif/ESP8266_NONOS_SDK
+# SDK_DIR = /mnt/d/Hobbies/programing/esp8266/espressif/ESP8266_NONOS_SDK_V2.2
+SDK_DIR = /mnt/d/Hobbies/programing/esp8266/espressif/ESP8266_NONOS_SDK
 SDK_INCLUDE_DIR = $(SDK_DIR)/include/
 SDK_LIB_DIR = $(SDK_DIR)/lib
 SDK_LINKER_SCRIPTS_DIR = $(SDK_DIR)/ld
@@ -42,7 +42,16 @@ $(BUILD_DIR)/$(FILENAME)-0x00000.bin: $(BUILD_DIR)/$(FILENAME).elf
 	$(OBJ_DUMP) -h $^ > $(BUILD_DIR)/dissasembly-headers.txt
 	$(OBJ_DUMP) -d $^ > $(BUILD_DIR)/dissasembly.txt
 
-$(BUILD_DIR)/$(FILENAME).elf: $(OBJ)
+#extracting app_partition.o from libmain.a since from some reason ld doesnt find system_partition_table_regist()
+$(BUILD_DIR)/app_partition.o: $(SDK_DIR)/lib/libmain.a
+	mkdir -p $(BUILD_DIR)/temp/
+	cp $< $(BUILD_DIR)/temp/libmain.a
+	cd $(BUILD_DIR)/temp/; $(AR) x libmain.a
+	cd ../..
+	cp $(BUILD_DIR)/temp/app_partition.o $(BUILD_DIR)/app_partition.o
+	rm -f -r $(BUILD_DIR)/temp
+	
+$(BUILD_DIR)/$(FILENAME).elf: $(OBJ) $(BUILD_DIR)/app_partition.o
 	@echo linking
 #	$(AR) x $(SDK_LIB_DIR)/libmain.a
 	$(LD) $(LD_FLAGS) -o $@ $^
@@ -72,7 +81,7 @@ upload: $(BUILD_DIR)/$(FILENAME).elf-0x00000.bin $(BUILD_DIR)/$(FILENAME).elf-0x
 #	esptool.py --port /dev/ttyS8 --baud $(BAUDRATE) write_flash 0 $(BUILD_DIR)/$(FILENAME).elf-0x00000.bin 0x10000 $(BUILD_DIR)/$(FILENAME).elf-0x10000.bin
 
 clean:
-	rm -f $(BUILD_DIR)/*
+	rm -f -r $(BUILD_DIR)/*
 	clear
 
 fresh: clean build

@@ -16,51 +16,28 @@ os_timer_t timer_battery;
 os_timer_t timer_save_battery;
 static uint8_t leds[NUMBER_OF_LEDS*3] = {0};
 
-#include <c_types.h>
-#include <spi_flash.h>
-
-uint32 ICACHE_FLASH_ATTR user_rf_cal_sector_set(void){
-    extern char flashchip;
-    SpiFlashChip *flash = (SpiFlashChip*)(&flashchip + 4);
-    // We know that sector size in 4096
-    // uint32_t sec_num = flash->chip_size / flash->sector_size;
-    uint32_t sec_num = flash->chip_size >> 12;
-    return sec_num - 5;
-	// return 0xFC - 1; //rf cal is uploaded to sector 251 - address 0xFC000.
-}
-
-void ICACHE_FLASH_ATTR user_rf_pre_init(void){}
-
-void ICACHE_FLASH_ATTR user_spi_flash_dio_to_qio_pre_init(void){}
-
-void ICACHE_FLASH_ATTR user_pre_init(void){}
-
-/*
-#include "user_interface.h"
-
-#define PARTITION_EAGLE_FLASH_BIN				(SYSTEM_PARTITION_CUSTOMER_BEGIN + 1)
-#define PARTITION_EAGLE_IROM0TEXT_BIN			(SYSTEM_PARTITION_CUSTOMER_BEGIN + 2)
-
 static const partition_item_t partition_table[] = {
-    { SYSTEM_PARTITION_BOOTLOADER, 	0x00000, 0x00000},
-    { SYSTEM_PARTITION_OTA_1, 	0x9000, 0x78000},
-    { SYSTEM_PARTITION_OTA_2, 	0x81000, 0x78000},
-    // { PARTITION_EAGLE_FLASH_BIN, 	0x00000, 0x10000},
-    // { PARTITION_EAGLE_IROM0TEXT_BIN, 0x10000, 0x60000},
+    // { SYSTEM_PARTITION_BOOTLOADER, 	0x00000, 0x00000},
+    // { SYSTEM_PARTITION_OTA_1, 	0x9000, 0x78000},
+    // { SYSTEM_PARTITION_OTA_2, 	0x81000, 0x78000},
+    { SYSTEM_PARTITION_CUSTOMER_BEGIN + 1, 	0x00000, 0x10000},
+    { SYSTEM_PARTITION_CUSTOMER_BEGIN + 2, 0x10000, 0x60000},
     { SYSTEM_PARTITION_RF_CAL, 0xFB000, 0x1000},
     { SYSTEM_PARTITION_PHY_DATA, 0xFC000, 0x1000},
     { SYSTEM_PARTITION_SYSTEM_PARAMETER, 0xFD000, 0x3000},
 };
 
 void user_pre_init(void){
-	os_printf("i'm here inside user_pre_init\r\n");
-	// system_restore();
     if(!system_partition_table_regist(partition_table, sizeof(partition_table)/sizeof(partition_table[0]), FLASH_SIZE_8M_MAP_512_512)){
 		os_printf("system_partition_table_regist fail\r\n");
 		while(1);
 	}
 }
-*/
+
+void ICACHE_FLASH_ATTR user_rf_pre_init(void){}
+
+void user_spi_flash_dio_to_qio_pre_init(void){}
+
 
 //os_timer_t uart_adc_timer;
 
