@@ -8,7 +8,6 @@ OBJ_DUMP = xtensa-lx106-elf-objdump
 GCC_INCLUDE_DIR = "/mnt/d/Hobbies/programing/esp8266/espressif/xtensa-lx106-elf/xtensa-lx106-elf/include/"
 FILENAME = main
 INCLUDE_DIR = include
-BUILD_DIR = build
 SRC_DIR = src
 BIN_DIR = image
 # SDK_DIR = /mnt/d/Hobbies/programing/esp8266/espressif/ESP8266_NONOS_SDK_V2.2
@@ -16,7 +15,9 @@ SDK_DIR = /mnt/d/Hobbies/programing/esp8266/espressif/ESP8266_NONOS_SDK
 SDK_INCLUDE_DIR = $(SDK_DIR)/include/
 SDK_LIB_DIR = $(SDK_DIR)/lib
 SDK_LINKER_SCRIPTS_DIR = $(SDK_DIR)/ld
-LINKER_SCRIPT = linker_scripts/my_linker_script.ld
+APP_NUMBER = 1
+LINKER_SCRIPT = linker_scripts/app$(APP_NUMBER)-512kB.ld
+BUILD_DIR = build_ota/$(APP_NUMBER)
 
 _OBJ = $(FILENAME).o server_main.o server_leds.o command_parser.o command_executer.o ws2812_i2s.o
 OBJ = $(patsubst %,$(BUILD_DIR)/%,$(_OBJ))
@@ -35,6 +36,7 @@ build: $(BUILD_DIR)/$(FILENAME)-0x00000.bin dissasembly
 $(BUILD_DIR)/$(FILENAME)-0x00000.bin: $(BUILD_DIR)/$(FILENAME).elf	
 	@echo turning $^ to binary
 	@esptool.py --chip esp8266 elf2image --flash_size 1MB --flash_freq 40m --flash_mode dout $^ > /dev/null
+	esptool image_info $(BUILD_DIR)/main.elf-0x00000.bin
 
 dissasembly: $(BUILD_DIR)/$(FILENAME).elf
 	@echo dissasembling

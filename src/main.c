@@ -5,6 +5,7 @@
 #include "string.h"
 #include "pin_mux_register.h"
 #include "mem.h"
+#include "upgrade.h"
 
 #include "server_main.h"
 #include "server_leds.h"
@@ -18,10 +19,10 @@ static uint8_t leds[NUMBER_OF_LEDS*3] = {0};
 
 static const partition_item_t partition_table[] = {
     // { SYSTEM_PARTITION_BOOTLOADER, 	0x00000, 0x00000},
-    // { SYSTEM_PARTITION_OTA_1, 	0x9000, 0x78000},
-    // { SYSTEM_PARTITION_OTA_2, 	0x81000, 0x78000},
-    { SYSTEM_PARTITION_CUSTOMER_BEGIN + 1, 	0x00000, 0x10000},
-    { SYSTEM_PARTITION_CUSTOMER_BEGIN + 2, 0x10000, 0x60000},
+    // { SYSTEM_PARTITION_OTA_1, 	0x19000, 0x68000},
+    // { SYSTEM_PARTITION_OTA_2, 	0x91000, 0x68000},
+    // { SYSTEM_PARTITION_CUSTOMER_BEGIN + 1, 	0x00000, 0x10000},
+    // { SYSTEM_PARTITION_CUSTOMER_BEGIN + 2, 0x10000, 0x60000},
     { SYSTEM_PARTITION_RF_CAL, 0xFB000, 0x1000},
     { SYSTEM_PARTITION_PHY_DATA, 0xFC000, 0x1000},
     { SYSTEM_PARTITION_SYSTEM_PARAMETER, 0xFD000, 0x3000},
@@ -32,6 +33,11 @@ void user_pre_init(void){
 		os_printf("system_partition_table_regist fail\r\n");
 		while(1);
 	}
+	uint8 current_bin = system_upgrade_userbin_check();
+	os_printf("currently running binary %d\r\n", current_bin);
+	system_upgrade_flag_set(UPGRADE_FLAG_FINISH);
+	os_printf("done upgrading (writing to binary to flash myself)\r\n");
+	system_upgrade_reboot();
 }
 
 void ICACHE_FLASH_ATTR user_rf_pre_init(void){}
@@ -154,9 +160,9 @@ void ICACHE_FLASH_ATTR user_wifi_event_cb(System_Event_t *e){
 }
 
 void ICACHE_FLASH_ATTR user_set_station_config(void){
-	char ssid[32] = "SKATELEDS";
+	char ssid[32] = "LEDSKATE";
 	//char password[64] = "iceland2018LEDS";
-	char password[64] = "iceeat2019LEDS";
+	char password[64] = "testing123";
 	struct station_config stationConf;
 	os_memset(stationConf.ssid, 0, 32); os_memset(stationConf.password, 0, 64);
 	os_memcpy(&stationConf.ssid, ssid, 32); os_memcpy(&stationConf.password, password, 64);
@@ -193,7 +199,7 @@ void ICACHE_FLASH_ATTR user_init(void){
 	wifi_set_opmode(STATION_MODE);
 	//wifi_station_disconnect();
 	wifi_station_dhcpc_set_maxtry(4);
-	wifi_station_set_hostname("esp8266!");
+	wifi_station_set_hostname(SKATE_NAME);
 	wifi_station_set_reconnect_policy(true);
 	os_printf("... set\r\n");
 	user_set_station_config();
