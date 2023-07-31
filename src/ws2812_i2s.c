@@ -63,6 +63,8 @@ Extra copyright info:
 #define i2c_bbpll_en_audio_clock_out_lsb        7
 #define i2c_bbpll_hostid                           4
 
+extern void rom_i2c_writeReg_Mask(int block, int host_id, int reg_add, int Msb, int Lsb, int indata); //provided directly from ROM linker script
+
 #define i2c_writeReg_Mask(block, host_id, reg_add, Msb, Lsb, indata)  rom_i2c_writeReg_Mask(block, host_id, reg_add, Msb, Lsb, indata)
 #define i2c_readReg_Mask(block, host_id, reg_add, Msb, Lsb)  rom_i2c_readReg_Mask(block, host_id, reg_add, Msb, Lsb)
 #define i2c_writeReg_Mask_def(block, reg_add, indata)  i2c_writeReg_Mask(block, block##_hostid,  reg_add,  reg_add##_msb,  reg_add##_lsb,  indata)

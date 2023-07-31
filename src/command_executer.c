@@ -1,4 +1,5 @@
 #include "command_executer.h"
+#include "user_config.h"
 
 #define NUMBER_OF_FUNCTIONS 1
 
@@ -44,15 +45,14 @@ static const struct function_profile function_loop_profile = {"loop",0,NULL};
 //static struct function_profile all_functions_profiles[NUMBER_OF_FUNCTIONS];
 
 typedef uint32 color;
-static int number_of_leds = 20;
-static uint8_t leds_current[20*3] = {0};
-static uint8_t leds_start[20*3] = {0}, leds_end[20*3] = {0};
+static uint8_t leds_current[NUMBER_OF_LEDS*3] = {0};
+static uint8_t leds_start[NUMBER_OF_LEDS*3] = {0}, leds_end[NUMBER_OF_LEDS*3] = {0};
 static uint32 leds_start_timestamp, leds_end_timestamp;
 static os_timer_t leds_timer;
 
-static void set_leds_to_goal(void){
-	os_memcpy(leds_current,leds_end,sizeof(uint8_t) * 20*3);
-	ws2812_push(leds_current, number_of_leds*3);
+static void ICACHE_FLASH_ATTR set_leds_to_goal(void){
+	os_memcpy(leds_current,leds_end,sizeof(uint8_t) * NUMBER_OF_LEDS*3);
+	ws2812_push(leds_current, NUMBER_OF_LEDS*3);
 }
 
 static void leds_timer_function(void){
@@ -63,12 +63,12 @@ static void leds_timer_function(void){
 		os_timer_disarm(&leds_timer);
 	}else{
 		float precent_through = (time_current - leds_start_timestamp) / (float)(leds_end_timestamp - leds_start_timestamp);
-		for(int l=0; l<number_of_leds; l++){
+		for(int l=0; l<NUMBER_OF_LEDS; l++){
 			leds_current[l*3 + 0] = leds_start[l*3 + 0] + (uint8_t)(precent_through * (leds_end[l*3 + 0] - leds_start[l*3 + 0]));
 			leds_current[l*3 + 1] = leds_start[l*3 + 1] + (uint8_t)(precent_through * (leds_end[l*3 + 1] - leds_start[l*3 + 1]));
 			leds_current[l*3 + 2] = leds_start[l*3 + 2] + (uint8_t)(precent_through * (leds_end[l*3 + 2] - leds_start[l*3 + 2]));
 		}
-		ws2812_push(leds_current, number_of_leds*3);
+		ws2812_push(leds_current, NUMBER_OF_LEDS*3);
 	}
 }
 
@@ -78,7 +78,7 @@ static void ICACHE_FLASH_ATTR set_leds_to_goal_within(int millis){
 	}else{
 		leds_start_timestamp = system_get_time()/1000;
 		leds_end_timestamp = leds_start_timestamp + millis;
-		os_memcpy(leds_start,leds_current,sizeof(uint8_t) * 20*3);
+		os_memcpy(leds_start,leds_current,sizeof(uint8_t) * NUMBER_OF_LEDS*3);
 		os_timer_disarm(&leds_timer);
 		os_timer_setfn(&leds_timer, (os_timer_func_t *)leds_timer_function, NULL);
 		os_timer_arm(&leds_timer, 20, 1);
@@ -94,7 +94,7 @@ void ICACHE_FLASH_ATTR initalize_command_executor(void){
 }
 
 static void setLed(int pos, color clr){
-	if(pos > number_of_leds) return;
+	if(pos > NUMBER_OF_LEDS) return;
 	int i = pos*3;
 	leds_end[i+2] = (uint8_t)clr;
 	leds_end[i+0] = (uint8_t)(clr >> 8);
@@ -108,7 +108,7 @@ static int set(void *p){
 	p += sizeof(int);
 	color *colors = (color *)p;
 //	os_printf("set: %d clrs,%dms\r\n",numberOfColors,millis);
-	if(numberOfColors > number_of_leds) numberOfColors = number_of_leds;
+	if(numberOfColors > NUMBER_OF_LEDS) numberOfColors = NUMBER_OF_LEDS;
 	for(int i=0; i<numberOfColors; i++) setLed(i,colors[i]);
 	set_leds_to_goal_within(millis);
 	return(0);
@@ -122,9 +122,9 @@ static int set(void *p){
 	p += sizeof(int);
 	color *colors = (color *)p;
 	os_printf("set: %d clrs,%dms\r\n",numberOfColors,millis);
-	if(numberOfColors > number_of_leds) numberOfColors = number_of_leds;
+	if(numberOfColors > NUMBER_OF_LEDS) numberOfColors = NUMBER_OF_LEDS;
 	for(int i=0; i<numberOfColors; i++) setLed(i,colors[i]);
-	ws2812_push(leds, number_of_leds*3);
+	ws2812_push(leds, NUMBER_OF_LEDS*3);
 }
 */
 
@@ -133,7 +133,7 @@ static int ICACHE_FLASH_ATTR setAll(void *p){
 	p += sizeof(int);
 	int millis = *(int *)(p);
 	os_printf("setAll color: %d,delay: %d\r\n",clr,millis);
-	for(int i=0; i<number_of_leds; i++) setLed(i,clr);
+	for(int i=0; i<NUMBER_OF_LEDS; i++) setLed(i,clr);
 	set_leds_to_goal_within(millis);
 	return(0);
 }
@@ -148,7 +148,7 @@ static int ICACHE_FLASH_ATTR shiftOut(void *p){
 	color clr = *(color *)p;
 	int millis = *((int *)p + 1);
 	os_printf("inside shiftOut command! with color of %d and time of %d\r\n",clr,millis);
-	for(int l = number_of_leds-1; l > 0; l--){
+	for(int l = NUMBER_OF_LEDS-1; l > 0; l--){
 		leds_end[l*3 + 0] = leds_end[l*3-3 + 0];
 		leds_end[l*3 + 1] = leds_end[l*3-3 + 1];
 		leds_end[l*3 + 2] = leds_end[l*3-3 + 2];
@@ -162,12 +162,12 @@ static int ICACHE_FLASH_ATTR shiftIn(void *p){
 	color clr = *(color *)p;
 	int millis = *((int *)p + 1);
 	os_printf("inside shiftIn command! with color of %d and time of %d\r\n",clr,millis);
-	for(int l=0; l<number_of_leds-1; l++){
+	for(int l=0; l<NUMBER_OF_LEDS-1; l++){
 		leds_end[l*3 + 0] = leds_end[l*3+3 + 0];
 		leds_end[l*3 + 1] = leds_end[l*3+3 + 1];
 		leds_end[l*3 + 2] = leds_end[l*3+3 + 2];
 	}
-	setLed(number_of_leds-1, clr);
+	setLed(NUMBER_OF_LEDS-1, clr);
 	set_leds_to_goal_within(millis);
 	return(0);
 }
@@ -185,7 +185,7 @@ struct{
 
 int script_3_colors[] = {0x0000ff,0x00ffff,0xffff00,0xff0000,0xff00ff};
 
-static void ICACHE_FLASH_ATTR execute_script(){
+static void execute_script(){
 	os_timer_disarm(&script_timer);
 	os_timer_setfn(&script_timer, (os_timer_func_t *)execute_script, NULL);
 	if(active_script == 1){
@@ -202,30 +202,32 @@ static void ICACHE_FLASH_ATTR execute_script(){
 		shiftOut(p);
 		os_timer_arm(&script_timer, 800, 0);
 	}else if(active_script == 3){
+		const int lit_amount = 7;
+		const int step_delay_ms = 30;
 		//stages:
-		// -shift out 5 from color
-		// -shift out 15 blacks
-		// -shift in 15 blacks
-		// -shift out 15 from color
-		// -shift out 15 black
+		// -shift out n from color
+		// -shift out NUMBER_OF_LEDS-lit_amount blacks
+		// -shift in NUMBER_OF_LEDS-lit_amount blacks
+		// -shift out NUMBER_OF_LEDS-lit_amount from color
+		// -shift out NUMBER_OF_LEDS-lit_amount black
 		// -repeat for each color
-		int p[] = {0, 100};
+		int p[] = {0, step_delay_ms};
 		// int nextStage = 200;
 		if(script_3_stage.stage == 0){
 			p[0] = script_3_colors[script_3_stage.color_number];
 			shiftOut(p);
 			script_3_stage.led_number++;
-			if(script_3_stage.led_number == 5){
+			if(script_3_stage.led_number == lit_amount){
 				script_3_stage.stage++;
-				script_3_stage.led_number=0;
+				script_3_stage.led_number = 0;
 			}
 		}else if(script_3_stage.stage == 1 || script_3_stage.stage == 2 || script_3_stage.stage == 4){
 			p[0] = 0;
 			if(script_3_stage.stage == 1 || script_3_stage.stage == 4) shiftOut(p); else shiftIn(p);
 			script_3_stage.led_number++;
-			if(script_3_stage.led_number == 15){
+			if(script_3_stage.led_number == NUMBER_OF_LEDS-lit_amount){
 				script_3_stage.stage++;
-				script_3_stage.led_number=0;
+				script_3_stage.led_number = 0;
 				if(script_3_stage.stage == 5){
 					script_3_stage.color_number++;
 					if(script_3_stage.color_number == 5) script_3_stage.color_number = 0;
@@ -233,20 +235,20 @@ static void ICACHE_FLASH_ATTR execute_script(){
 				}
 			}
 		}else if(script_3_stage.stage == 3){
-			p[0] = script_3_colors[script_3_stage.color_number];;
+			p[0] = script_3_colors[script_3_stage.color_number];
 			shiftOut(p);
 			script_3_stage.led_number++;
-			if(script_3_stage.led_number == 15){
+			if(script_3_stage.led_number == NUMBER_OF_LEDS-lit_amount){
 				script_3_stage.stage++;
-				script_3_stage.led_number=0;
+				script_3_stage.led_number = 0;
 			}
 		}
-		os_timer_arm(&script_timer, 100, 0);
+		os_timer_arm(&script_timer, step_delay_ms, 0);
 		return;
 		/*p[0] = script_3_colors[script_3_stage.color_number];
 		if(script_3_stage.direction) shiftIn(p); else shiftOut(p);
 		script_3_stage.led_number++;
-		if(script_3_stage.led_number == 20){ script_3_stage.color_number++; script_3_stage.led_number = 0;}
+		if(script_3_stage.led_number == NUMBER_OF_LEDS){ script_3_stage.color_number++; script_3_stage.led_number = 0;}
 		if(script_3_stage.color_number == 5){ script_3_stage.color_number = 0; script_3_stage.direction = !script_3_stage.direction;};
 		os_timer_arm(&script_timer, 150, 0);*/
 	}
@@ -278,7 +280,7 @@ static int ICACHE_FLASH_ATTR loop(){
 /*static void ICACHE_FLASH_ATTR setAtIndex(color color, int position, int millis){
 	os_printf("set: %d color at position %d, delay: %d\r\n", color, position, millis);
 	setLed(position-1,color);
-	ws2812_push(leds, number_of_leds*3);
+	ws2812_push(leds, NUMBER_OF_LEDS*3);
 }*/
 
 void ICACHE_FLASH_ATTR add_final_command_to_queue(final_command cmd){
@@ -311,7 +313,7 @@ void ICACHE_FLASH_ATTR stop_executing_queue(){
 	active_script = 0;
 }
 
-void ICACHE_FLASH_ATTR execute_queue(){
+void execute_queue(){
 	os_timer_disarm(&command_queue_executor_timer);
 	if(commands_queue.size == 0 || commands_queue.next_command == commands_queue.size){
 		os_printf("command queue size is 0 or next command doesnt exists...\r\n");
@@ -438,7 +440,7 @@ final_command ICACHE_FLASH_ATTR finalize_command(cli_command *cmd){
 	return(c);
 }
 
-int execute_final_command(final_command c){
+int ICACHE_FLASH_ATTR execute_final_command(final_command c){
 	if(c.function == FUNCTION_ID_NO_FUNCTION) return(false);
 	switch(c.function){
 	case FUNCTION_ID_set: return(set(c.parameters));

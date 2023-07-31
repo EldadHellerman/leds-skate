@@ -10,12 +10,58 @@
 #include "server_leds.h"
 #include "command_parser.h"
 #include "ws2812_i2s.h"
+#include "user_config.h"
 
 os_timer_t timer_battery;
 os_timer_t timer_save_battery;
-static uint8_t leds[20*3] = {0};
+static uint8_t leds[NUMBER_OF_LEDS*3] = {0};
 
-//void ICACHE_FLASH_ATTR user_rf_pre_init(void){}
+#include <c_types.h>
+#include <spi_flash.h>
+
+uint32 ICACHE_FLASH_ATTR user_rf_cal_sector_set(void){
+    extern char flashchip;
+    SpiFlashChip *flash = (SpiFlashChip*)(&flashchip + 4);
+    // We know that sector size in 4096
+    // uint32_t sec_num = flash->chip_size / flash->sector_size;
+    uint32_t sec_num = flash->chip_size >> 12;
+    return sec_num - 5;
+	// return 0xFC - 1; //rf cal is uploaded to sector 251 - address 0xFC000.
+}
+
+void ICACHE_FLASH_ATTR user_rf_pre_init(void){}
+
+void ICACHE_FLASH_ATTR user_spi_flash_dio_to_qio_pre_init(void){}
+
+void ICACHE_FLASH_ATTR user_pre_init(void){}
+
+/*
+#include "user_interface.h"
+
+#define PARTITION_EAGLE_FLASH_BIN				(SYSTEM_PARTITION_CUSTOMER_BEGIN + 1)
+#define PARTITION_EAGLE_IROM0TEXT_BIN			(SYSTEM_PARTITION_CUSTOMER_BEGIN + 2)
+
+static const partition_item_t partition_table[] = {
+    { SYSTEM_PARTITION_BOOTLOADER, 	0x00000, 0x00000},
+    { SYSTEM_PARTITION_OTA_1, 	0x9000, 0x78000},
+    { SYSTEM_PARTITION_OTA_2, 	0x81000, 0x78000},
+    // { PARTITION_EAGLE_FLASH_BIN, 	0x00000, 0x10000},
+    // { PARTITION_EAGLE_IROM0TEXT_BIN, 0x10000, 0x60000},
+    { SYSTEM_PARTITION_RF_CAL, 0xFB000, 0x1000},
+    { SYSTEM_PARTITION_PHY_DATA, 0xFC000, 0x1000},
+    { SYSTEM_PARTITION_SYSTEM_PARAMETER, 0xFD000, 0x3000},
+};
+
+void user_pre_init(void){
+	os_printf("i'm here inside user_pre_init\r\n");
+	// system_restore();
+    if(!system_partition_table_regist(partition_table, sizeof(partition_table)/sizeof(partition_table[0]), FLASH_SIZE_8M_MAP_512_512)){
+		os_printf("system_partition_table_regist fail\r\n");
+		while(1);
+	}
+}
+*/
+
 //os_timer_t uart_adc_timer;
 
 /*void ICACHE_FLASH_ATTR user_test_ip(void){
@@ -39,11 +85,11 @@ static uint8_t leds[20*3] = {0};
 bool battery_low = false;
 bool shutdown = false;
 
-void ICACHE_FLASH_ATTR check_battery(void){
+void check_battery(void){
 	if(shutdown){
 		stop_executing_queue();
-		for(int i=0; i<20*3; i++) leds[i] = 0;
-		ws2812_push(leds, 20*3);
+		for(int i=0; i<NUMBER_OF_LEDS*3; i++) leds[i] = 0;
+		ws2812_push(leds, NUMBER_OF_LEDS*3);
 		wifi_station_set_reconnect_policy(false);
 		wifi_station_disconnect();
 		wifi_set_opmode(NULL_MODE);
@@ -52,7 +98,7 @@ void ICACHE_FLASH_ATTR check_battery(void){
 		return;
 	}
 	uint16 voltage = system_get_vdd33();
-	os_printf("battery voltag is: %d\r\n",voltage);
+	os_printf("battery voltage is: %d\r\n",voltage);
 	bool voltage_low = voltage < 3200;
 	if(voltage_low && !battery_low){
 		battery_low = true;
@@ -64,9 +110,10 @@ void ICACHE_FLASH_ATTR check_battery(void){
 		user_main_server_close();
 		user_leds_server_close();
 		stop_executing_queue();
-		for(int i=0; i<20*3; i++) leds[i] = 0;
+		for(int i=0; i<NUMBER_OF_LEDS*3; i++) leds[i] = 0; //all black
+		for(int i=0; i<9*3; i+=3*3) leds[i+1] = 0xff; //first three alternating red
 		leds[1] = 0xff; leds[4] = 0xff; leds[18*3 + 1] = 0xff; leds[19*3 + 1] = 0xff;
-		ws2812_push(leds, 20*3);
+		ws2812_push(leds, NUMBER_OF_LEDS*3);
 		shutdown = true;
 		os_timer_setfn(&timer_battery, (os_timer_func_t *)check_battery, NULL);
 		os_timer_arm(&timer_battery, 3*60*1000, 0);
@@ -78,7 +125,7 @@ void ICACHE_FLASH_ATTR check_battery(void){
 
 bool wifi_on = false;
 
-void ICACHE_FLASH_ATTR save_battery(void){
+void save_battery(void){
 	os_timer_disarm(&timer_save_battery);
 	os_timer_setfn(&timer_save_battery, (os_timer_func_t *)save_battery, NULL);
 	if(wifi_on){
@@ -149,16 +196,13 @@ void ICACHE_FLASH_ATTR user_set_station_config(void){
 	user_leds_server_init(12345);
 }
 
-void start_default_script(void){
+void ICACHE_FLASH_ATTR start_default_script(void){
 	char *script = "delay(10000); script(3);";
 	execute_commands_from_string(script,strlen(script));
 }
 
-//#include "upgrade.h"
-void ICACHE_FLASH_ATTR user_pre_init(void){
-}
-
 void ICACHE_FLASH_ATTR user_init(void){
+	os_printf("i'm here inside user_init\r\n");
 	setMaxCommandNameLength(20);
 	uart_div_modify(0,UART_CLK_FREQ/115200); //uart_init(uart0_br, uart1_br); //why am i not using that?
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0RXD_U, FUNC_I2SO_DATA);

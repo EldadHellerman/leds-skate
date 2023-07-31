@@ -73,7 +73,7 @@ static unsigned char hexDigitValue(char c){
  * return the number of spaces (' '), newlines ('\n'), or backslash with newline ('\\'+'\n')
  * characters found from the given string
  */
-int consumeSpaces(char *str){
+int ICACHE_FLASH_ATTR consumeSpaces(char *str){
 	int i = 0;
 	while(1){
 		if(str[i] == ' ' || str[i] == '\n') i++;

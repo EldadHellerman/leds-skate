@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "pin_mux_register.h": "c",
+        "user_interface.h": "c"
+    }
+}

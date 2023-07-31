@@ -1,1 +1,2 @@
-//this is required by esp8266 sdk if I recall.
+//required by esp8266 sdk.
+#define NUMBER_OF_LEDS 72
